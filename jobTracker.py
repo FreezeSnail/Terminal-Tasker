@@ -13,7 +13,7 @@ class JobModule:
             'Link': link })
 
         def print(self):
-            print(self.jobList)
+            return 'Company: ' 
 
         def getJobList(self):
             return self.jobList
