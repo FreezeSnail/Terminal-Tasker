@@ -22,33 +22,78 @@ def quit(stdscr):
     curses.echo()
     curses.endwin()
 
+def menuSelect(k):
+    if(k == ord('j')):
+        return 0,  MENU.JOB
+    elif(k == ord('m')):
+        return 0, MENU.MAIN
+
+    return 1, 0
+
+
+menu = ["test1", "test2"]
+def print_menu(stdscr, selected_row_idx):
+    stdscr.clear()
+    h, w = stdscr.getmaxyx()
+    for idx, row in enumerate(menu):
+        x = w//2 - len(row)//2
+        y = h//2 - len(menu)//2 + idx
+        if idx == selected_row_idx:
+            stdscr.attron(curses.color_pair(1))
+            stdscr.addstr(y, x, row)
+            stdscr.attroff(curses.color_pair(1))
+        else:
+            stdscr.addstr(y, x, row)
+    stdscr.refresh()
+
+
+
 def jobMenu(stdscr):
     k = 0
     cursor_x = 0
     cursor_y = 0
     height, width = stdscr.getmaxyx()
 
-    if k == curses.KEY_DOWN:
-        cursor_y = cursor_y + 1
-    elif k == curses.KEY_UP:
-        cursor_y = cursor_y - 1
-    elif k == curses.KEY_RIGHT:
-        cursor_x = cursor_x + 1
-    elif k == curses.KEY_LEFT:
-        cursor_x = cursor_x - 1
+    while(1):
+        stdscr.clear()
+        if k == curses.KEY_DOWN:
+            cursor_y = cursor_y + 1
+        elif k == curses.KEY_UP:
+            cursor_y = cursor_y - 1
+        elif k == curses.KEY_RIGHT:
+            cursor_x = cursor_x + 1
+        elif k == curses.KEY_LEFT:
+            cursor_x = cursor_x - 1
 
-    cursor_x = max(0, cursor_x)
-    cursor_x = min(width-1, cursor_x)
+        cursor_x = max(0, cursor_x)
+        cursor_x = min(width-1, cursor_x)
 
-    cursor_y = max(0, cursor_y)
-    cursor_y = min(height-1, cursor_y)
+        cursor_y = max(0, cursor_y)
+        cursor_y = min(height-1, cursor_y)
+        print_menu(stdscr, cursor_y)
 
-    i = 0
-    for job in jobs.getJobList():
-        output = "Company: " + str(job['Company'])  + " Posistion: " + str(job['Posistion']) + " Date: " + str(job['Date'])+ " Status: "  + str(job['Status'])
+        i = 0
+        for job in jobs.getJobList():
+            output = "Company: " + str(job['Company'])  + " Posistion: " + str(job['Posistion']) + " Date: " + str(job['Date'])+ " Status: "  + str(job['Status'])
 
-        stdscr.addstr(cursor_y + i, cursor_x, output)
-        i += 1
+            stdscr.addstr(cursor_y + i, cursor_x, output)
+            i += 1
+
+        stdscr.addstr(cursor_y + i, cursor_x, str(cursor_y))
+
+        _, menuMode = menuSelect(k)
+
+        #switchcase for modes
+        if (menuMode == MENU.MAIN):
+            break
+
+        # Refresh the screen
+        stdscr.refresh()
+
+        # Wait for next input
+        k = stdscr.getch()
+
+        
 
 def mainMenu(stdscr):
     k = 0
@@ -56,52 +101,42 @@ def mainMenu(stdscr):
     cursor_y = 0
     height, width = stdscr.getmaxyx()
 
-    if k == curses.KEY_DOWN:
-        cursor_y = cursor_y + 1
-    elif k == curses.KEY_UP:
-        cursor_y = cursor_y - 1
-    elif k == curses.KEY_RIGHT:
-        cursor_x = cursor_x + 1
-    elif k == curses.KEY_LEFT:
-        cursor_x = cursor_x - 1
+    while(menuSelect(k)):
+        stdscr.clear()
 
-    cursor_x = max(0, cursor_x)
-    cursor_x = min(width-1, cursor_x)
+        if k == curses.KEY_DOWN:
+            cursor_y = cursor_y + 1
+        elif k == curses.KEY_UP:
+            cursor_y = cursor_y - 1
+        elif k == curses.KEY_RIGHT:
+            cursor_x = cursor_x + 1
+        elif k == curses.KEY_LEFT:
+            cursor_x = cursor_x - 1
 
-    cursor_y = max(0, cursor_y)
-    cursor_y = min(height-1, cursor_y)
+        cursor_x = max(0, cursor_x)
+        cursor_x = min(width-1, cursor_x)
 
-        # Declaration of strings
-    title = "Curses example"[:width-1]
-    subtitle = "Written by Clay McLeod"[:width-1]
-    keystr = "Last key pressed: {}".format(k)[:width-1]
+        cursor_y = max(0, cursor_y)
+        cursor_y = min(height-1, cursor_y)
 
-    if k == 0:
-        keystr = "No key press detected..."[:width-1]
+          
+            
+        stdscr.move(cursor_y, cursor_x)
 
-    #jobModule
-    stdscr.addstr(str(jobs.print()))
+        _, menuMode = menuSelect(k)
 
-        # Centering calculations
-    start_x_title = int((width // 2) - (len(title) // 2) - len(title) % 2)
-    start_x_subtitle = int((width // 2) - (len(subtitle) // 2) - len(subtitle) % 2)
-    start_x_keystr = int((width // 2) - (len(keystr) // 2) - len(keystr) % 2)
-    start_y = int((height // 2) - 2)
+        #switchcase for modes
+        if (menuMode == MENU.MAIN):
+            curses.wrapper(mainMenu)
+        elif (menuMode == MENU.JOB):
+            curses.wrapper(jobMenu)
 
-        # Rendering some text
-    whstr = "Width: {}, Height: {}".format(width, height)
-    stdscr.addstr(0, 0, whstr, curses.color_pair(1))
+        # Refresh the screen
+        stdscr.refresh()
 
-    # Rendering title
-    stdscr.addstr(start_y, start_x_title, title)
+        # Wait for next input
+        k = stdscr.getch()
 
-        # Print rest of text
-    stdscr.addstr(start_y + 1, start_x_subtitle, subtitle)
-    stdscr.addstr(start_y + 3, (width // 2) - 2, '-' * 4)
-    stdscr.addstr(start_y + 5, start_x_keystr, keystr)
-        #jobModule
-        
-    stdscr.move(cursor_y, cursor_x)
         
     
 
@@ -145,15 +180,11 @@ def draw_menu(stdscr):
         cursor_y = min(height-1, cursor_y)
 
 
-        if(k == ord('j')):
-            menuMode = MENU.JOB
-        elif(k == ord('m')):
-            menuMode = MENU.MAIN
+        _, menuMode = menuSelect(k)
 
         #switchcase for modes
-        if (menuMode == MENU.MAIN):
-            curses.wrapper(mainMenu)
-        elif (menuMode == MENU.JOB):
+        
+        if (menuMode == MENU.JOB):
             curses.wrapper(jobMenu)
 
         # Centering calculations 
